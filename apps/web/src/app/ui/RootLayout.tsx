@@ -32,6 +32,9 @@ export const RootLayout = () => {
             <NavLink to="/" end className={navLinkClass}>
               Каталог
             </NavLink>
+            <NavLink to="/orders" end className={navLinkClass}>
+              Заказы
+            </NavLink>
             <NavLink to="/cart" className={cartLinkClass}>
               Корзина{' '}
               <span className="w-10 tabular-nums">

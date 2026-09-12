@@ -16,7 +16,7 @@ const headlineFor = (order: Order, outcome: OrderOutcome) => {
     case 'confirmed':
       return `Заказ ${order.number} оформлен, оплата при получении.`;
     case 'pending':
-      return `Заказ ${order.number}: оплата обрабатывается.`;
+      return `Заказ ${order.number} ожидает оплаты.`;
     case 'unpaid':
       return `Заказ ${order.number} ожидает оплаты.`;
   }
@@ -56,11 +56,11 @@ export const OrderPage = () => {
       {(outcome === 'unpaid' || outcome === 'pending') && (
         <div className="mb-12">
           <ButtonLink to={paymentPath}>
-            {outcome === 'pending' ? 'Проверить оплату' : 'Оплатить'}
+            {outcome === 'pending' ? 'Продолжить оплату' : 'Оплатить'}
           </ButtonLink>
         </div>
       )}
-      <table className="w-full max-w-3xl table-fixed border-t border-hairline">
+      <table className="w-full table-fixed border-t border-hairline">
         <colgroup>
           <col />
           <col className="w-16" />
@@ -87,7 +87,7 @@ export const OrderPage = () => {
           ))}
         </tbody>
       </table>
-      <dl className="mt-6 flex max-w-3xl flex-col gap-2">
+      <dl className="mt-6 flex flex-col gap-2">
         <div className="flex justify-between gap-4">
           <dt className="text-muted">Доставка</dt>
           <dd className="text-end">{describeDelivery(order.delivery, options?.deliveryMethods)}</dd>
