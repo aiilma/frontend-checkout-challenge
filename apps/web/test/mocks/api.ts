@@ -1,5 +1,7 @@
 import { http, HttpResponse, type HttpResponseResolver } from 'msw';
 
+import { type Cart } from '@checkout/contracts';
+
 import { apiBaseUrl } from '@/shared/config/env';
 import { type ApiErrorField } from '@/shared/api/error';
 
@@ -25,7 +27,7 @@ export const counting = (resolver: HttpResponseResolver) => {
 };
 
 export const sessionToken = '11111111-1111-4111-8111-111111111111';
-export const emptyCart = {
+export const emptyCart: Cart = {
   id: 'cart-1',
   version: 0,
   items: [],

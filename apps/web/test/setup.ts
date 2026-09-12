@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest';
+import './polyfills/resize-observer';
 import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 

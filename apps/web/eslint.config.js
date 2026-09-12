@@ -90,6 +90,10 @@ export default defineConfig([
   { files: ['src/app/**'], rules: restricted(bans.sliceInternals, bans.axios, bans.lucide) },
   {
     files: ['src/pages/**'],
+    rules: restricted(bans.sliceInternals, bans.axios, bans.lucide, bans.layers('app')),
+  },
+  {
+    files: ['src/pages/*/ui/**'],
     rules: restricted(bans.sliceInternals, bans.axios, bans.lucide, bans.query, bans.layers('app')),
   },
   {
