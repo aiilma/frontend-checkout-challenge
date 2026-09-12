@@ -15,9 +15,15 @@ interface ProductCardProps {
   onAdd: () => void;
 }
 
+const captionFor = (inCart: number, canAddMore: boolean) => {
+  if (inCart === 0) return '';
+  return canAddMore ? `В корзине: ${inCart}` : `В корзине: ${inCart}, это весь остаток`;
+};
+
 export const ProductCard = ({ product, inCart, isAdding, addError, onAdd }: ProductCardProps) => {
   const available = isAvailable(product);
   const canAddMore = inCart < product.stock;
+  const caption = addError ? addError.message : captionFor(inCart, canAddMore);
 
   return (
     <article
@@ -31,21 +37,19 @@ export const ProductCard = ({ product, inCart, isAdding, addError, onAdd }: Prod
       <p className="text-muted">{product.description}</p>
       <MoneyText kopecks={product.price} className="mt-auto" />
       {available ? (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col items-start gap-1">
           <TextAction glyph="plus" onClick={onAdd} disabled={isAdding || !canAddMore}>
             {isAdding ? 'Добавляем…' : 'В корзину'}
           </TextAction>
-          {inCart > 0 && (
-            <span className="text-caption text-muted">
-              {canAddMore ? `В корзине: ${inCart}` : `В корзине: ${inCart}, больше нет`}
-            </span>
-          )}
-          {addError && (
-            <span className="flex items-center gap-1 text-caption">
-              <Glyph name="arrow" className="text-accent" />
-              {addError.message}
-            </span>
-          )}
+          <span
+            className={cn(
+              'flex min-h-5 items-center gap-1 text-caption',
+              !addError && 'text-muted',
+            )}
+          >
+            {addError && <Glyph name="arrow" className="text-warning" />}
+            {caption}
+          </span>
         </div>
       ) : (
         <span className="text-caption text-muted">Нет в наличии</span>

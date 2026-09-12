@@ -84,7 +84,7 @@ describe('CatalogPage', () => {
     );
     renderWithProviders(<CatalogPage />);
 
-    expect(await screen.findByText('В корзине: 1, больше нет')).toBeVisible();
+    expect(await screen.findByText('В корзине: 1, это весь остаток')).toBeVisible();
     expect(screen.getByRole('button', { name: 'В корзину' })).toBeDisabled();
   });
 

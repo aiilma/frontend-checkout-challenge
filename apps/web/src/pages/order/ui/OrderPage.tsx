@@ -60,15 +60,27 @@ export const OrderPage = () => {
           </ButtonLink>
         </div>
       )}
-      <table className="w-full max-w-3xl border-t border-hairline">
+      <table className="w-full max-w-3xl table-fixed border-t border-hairline">
+        <colgroup>
+          <col />
+          <col className="w-16" />
+          <col className="w-28" />
+        </colgroup>
+        <thead className="sr-only">
+          <tr>
+            <th scope="col">Товар</th>
+            <th scope="col">Количество</th>
+            <th scope="col">Сумма</th>
+          </tr>
+        </thead>
         <tbody>
           {order.items.map((item) => (
             <tr key={item.productId} className="border-b border-hairline">
-              <th scope="row" className="py-3 pr-3 text-left font-normal">
+              <th scope="row" className="py-3 pe-3 text-start font-normal">
                 {item.title}
               </th>
               <td className="px-3 py-3 text-muted tabular-nums">× {item.quantity}</td>
-              <td className="py-3 pl-3 text-right">
+              <td className="py-3 ps-3 text-end">
                 <MoneyText kopecks={item.lineTotal} />
               </td>
             </tr>
@@ -78,9 +90,7 @@ export const OrderPage = () => {
       <dl className="mt-6 flex max-w-3xl flex-col gap-2">
         <div className="flex justify-between gap-4">
           <dt className="text-muted">Доставка</dt>
-          <dd className="text-right">
-            {describeDelivery(order.delivery, options?.deliveryMethods)}
-          </dd>
+          <dd className="text-end">{describeDelivery(order.delivery, options?.deliveryMethods)}</dd>
         </div>
         <div className="flex justify-between gap-4">
           <dt className="text-muted">Товары</dt>

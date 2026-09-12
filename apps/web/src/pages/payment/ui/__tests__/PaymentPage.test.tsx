@@ -132,6 +132,17 @@ describe('PaymentPage', () => {
     expect(state.createKeys[0]).toMatch(/^[A-Za-z0-9_-]{8,128}$/);
   });
 
+  it('оплата без выбранной карты подсвечивает группу карт', async () => {
+    const state = usePaymentsApi();
+    const { user } = renderPayment();
+    await screen.findByRole('radio', { name: /успешная оплата/ });
+
+    await user.click(screen.getByRole('button', { name: 'Оплатить' }));
+
+    expect(await screen.findByText('Выберите карту')).toBeVisible();
+    expect(state.scenarios.size).toBe(0);
+  });
+
   it('успешная оплата: имитация, ожидание, опрос до succeeded и переход к заказу', async () => {
     const state = usePaymentsApi();
     const { user } = renderPayment();

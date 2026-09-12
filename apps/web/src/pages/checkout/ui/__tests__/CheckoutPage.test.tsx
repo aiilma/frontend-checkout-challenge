@@ -244,8 +244,27 @@ describe('CheckoutPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Перейти к оплате' }));
 
-    expect(await screen.findByText('Сервер не принял это значение')).toBeVisible();
+    expect(
+      await screen.findByText('Сервер не принял значение. Проверьте поле и отправьте снова.'),
+    ).toBeVisible();
     expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('отправка без пункта выдачи подсвечивает группу и не создаёт заказ', async () => {
+    const quotes = useCheckoutState();
+    const orders = useOrdersApi(quotes);
+    const { user } = renderCheckout();
+    await screen.findByRole('radio', { name: /Самовывоз/ });
+    await fillContacts(user);
+
+    await user.click(screen.getByRole('button', { name: 'Перейти к оплате' }));
+
+    expect(await screen.findByText('Выберите пункт выдачи')).toBeVisible();
+    expect(screen.getByRole('radiogroup', { name: 'Пункт выдачи' })).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+    expect(orders.bodies).toHaveLength(0);
   });
 
   it('пустая корзина не даёт оформить заказ', async () => {

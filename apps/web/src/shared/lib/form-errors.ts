@@ -2,7 +2,7 @@ import { type FieldValues, type Path, type UseFormSetError } from 'react-hook-fo
 
 import { type ApiErrorField } from '@/shared/api/error';
 
-const SERVER_FIELD_MESSAGE = 'Сервер не принял это значение';
+const SERVER_FIELD_MESSAGE = 'Сервер не принял значение. Проверьте поле и отправьте снова.';
 
 const toFormPath = (path: string) => path.replace(/^body\//, '').replaceAll('/', '.');
 

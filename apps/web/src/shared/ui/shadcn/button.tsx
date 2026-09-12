@@ -5,13 +5,13 @@ import { type ComponentProps } from 'react';
 import { cn } from '@/shared/lib/cn';
 
 const buttonVariants = cva(
-  'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
         primary: 'h-11 bg-ink px-5 font-medium text-white hover:bg-ink/90',
         brand: 'h-11 bg-accent-deep px-5 font-medium text-white hover:bg-accent-deep/90',
-        text: 'gap-1 text-ink hover:underline hover:underline-offset-2',
+        text: 'min-h-6 gap-1 text-ink hover:underline hover:underline-offset-2',
       },
     },
     defaultVariants: {

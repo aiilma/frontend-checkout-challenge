@@ -11,6 +11,7 @@ import { formatMoney } from '@/shared/lib/money';
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value';
 import { ErrorBar } from '@/shared/ui/ErrorBar';
 import { FormSection } from '@/shared/ui/FormSection';
+import { Glyph } from '@/shared/ui/Glyph';
 import { RadioCards } from '@/shared/ui/RadioCards';
 import { TextField } from '@/shared/ui/TextField';
 import { Button } from '@/shared/ui/shadcn/button';
@@ -59,7 +60,11 @@ export const CheckoutForm = ({ cart, options }: CheckoutFormProps) => {
   const navigate = useNavigate();
 
   const onSubmit = ({ customer, paymentMethod: method }: CheckoutOrderInput) => {
-    if (!quote) return;
+    form.clearErrors('root.quote');
+    if (!quote) {
+      form.setError('root.quote', { message: 'Дождитесь расчёта доставки и нажмите ещё раз.' });
+      return;
+    }
     createOrder.mutate(
       { quoteId: quote.id, customer, paymentMethod: method },
       {
@@ -80,7 +85,7 @@ export const CheckoutForm = ({ cart, options }: CheckoutFormProps) => {
     <form
       onSubmit={(event) => void form.handleSubmit(onSubmit)(event)}
       noValidate
-      className="flex flex-col gap-12"
+      className="flex max-w-4xl flex-col gap-12"
     >
       <FormSection title="О вас">
         <TextField
@@ -189,13 +194,19 @@ export const CheckoutForm = ({ cart, options }: CheckoutFormProps) => {
         />
       </FormSection>
 
-      <div className="flex flex-col gap-6 md:ml-[calc(200px+1.5rem)]">
+      <div className="flex flex-col gap-6 md:ms-[calc(200px+1.5rem)]">
         <OrderSummary cart={cart} quote={quote} isCalculating={isCalculating} error={quoteError} />
         {createOrder.error && <ErrorBar error={createOrder.error} />}
+        {errors.root?.quote && (
+          <p role="alert" className="flex items-center gap-1 text-caption">
+            <Glyph name="arrow" className="text-warning" />
+            {errors.root.quote.message}
+          </p>
+        )}
         <Button
           type="submit"
           className="self-start"
-          disabled={!quote || isCalculating || createOrder.isPending}
+          disabled={isCalculating || createOrder.isPending}
         >
           {createOrder.isPending
             ? 'Оформляем…'

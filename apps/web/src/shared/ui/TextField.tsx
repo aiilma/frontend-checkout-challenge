@@ -1,5 +1,6 @@
 import { type ComponentProps, useId } from 'react';
 
+import { cn } from '@/shared/lib/cn';
 import { Glyph } from '@/shared/ui/Glyph';
 import { Input } from '@/shared/ui/shadcn/input';
 import { Label } from '@/shared/ui/shadcn/label';
@@ -14,7 +15,7 @@ export const TextField = ({ label, error, className, ...props }: TextFieldProps)
   const errorId = `${id}-error`;
 
   return (
-    <div className={className}>
+    <div className={cn('flex flex-col gap-2', className)}>
       <Label htmlFor={id}>{label}</Label>
       <Input
         id={id}
@@ -23,8 +24,8 @@ export const TextField = ({ label, error, className, ...props }: TextFieldProps)
         {...props}
       />
       {error && (
-        <span id={errorId} className="mt-1 flex items-center gap-1 text-caption">
-          <Glyph name="arrow" className="text-accent" />
+        <span id={errorId} className="flex items-center gap-1 text-caption">
+          <Glyph name="arrow" className="text-warning" />
           {error}
         </span>
       )}

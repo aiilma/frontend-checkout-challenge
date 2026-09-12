@@ -48,7 +48,19 @@ export const CartPage = () => {
     <>
       <PageTitle>Корзина</PageTitle>
       {error && <ErrorBar error={error} onRetry={() => void refetch()} />}
-      <table className="w-full border-t border-hairline">
+      <table className="w-full table-fixed border-t border-hairline">
+        <colgroup>
+          <col />
+          <col className="w-40" />
+          <col className="w-28" />
+        </colgroup>
+        <thead className="sr-only">
+          <tr>
+            <th scope="col">Товар</th>
+            <th scope="col">Количество</th>
+            <th scope="col">Сумма</th>
+          </tr>
+        </thead>
         <tbody>
           {items.map((item) => {
             const stock = productsById.get(item.productId)?.stock;
@@ -74,7 +86,7 @@ export const CartPage = () => {
         </tbody>
       </table>
       <div className="mt-6 flex flex-col items-end gap-4">
-        <p className="text-muted">Товары: {cart.quantity} шт.</p>
+        <p className="text-muted">Товары, {cart.quantity} шт.</p>
         <p className="flex items-baseline gap-4">
           <span>Итого</span>
           <MoneyText kopecks={cart.subtotal} className="text-section" />

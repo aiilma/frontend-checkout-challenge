@@ -24,7 +24,6 @@ export const PaymentSheet = ({ order, isWaiting, onDismiss, children }: PaymentS
     }}
   >
     <SheetContent
-      showCloseButton={false}
       className="bg-accent-deep text-white"
       onInteractOutside={(event) => {
         event.preventDefault();
@@ -37,7 +36,7 @@ export const PaymentSheet = ({ order, isWaiting, onDismiss, children }: PaymentS
       )}
       <SheetHeader>
         <SheetTitle className="text-white">Оплата заказа {order.number}</SheetTitle>
-        <SheetDescription className="text-white/80">Сумма к оплате</SheetDescription>
+        <SheetDescription className="text-white">Сумма к оплате</SheetDescription>
         <MoneyText kopecks={order.total} className="text-display" />
       </SheetHeader>
       <div className="flex flex-col gap-6 px-5 pb-5">{children}</div>

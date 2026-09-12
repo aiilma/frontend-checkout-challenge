@@ -1,4 +1,3 @@
-import { XIcon } from 'lucide-react';
 import { Dialog as SheetPrimitive } from 'radix-ui';
 import { type ComponentProps } from 'react';
 
@@ -31,33 +30,22 @@ const SheetOverlay = ({ className, ...props }: ComponentProps<typeof SheetPrimit
   />
 );
 
-interface SheetContentProps extends ComponentProps<typeof SheetPrimitive.Content> {
-  showCloseButton?: boolean;
-}
-
 const SheetContent = ({
   className,
   children,
-  showCloseButton = true,
   ...props
-}: SheetContentProps) => (
+}: ComponentProps<typeof SheetPrimitive.Content>) => (
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content
       data-slot="sheet-content"
       className={cn(
-        'fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col gap-4 bg-surface text-ink data-[state=closed]:animate-sheet-out data-[state=open]:animate-sheet-in motion-reduce:animate-none sm:max-w-md',
+        'fixed inset-y-0 end-0 z-50 flex h-full w-full flex-col gap-4 bg-surface text-ink data-[state=closed]:animate-sheet-out data-[state=open]:animate-sheet-in motion-reduce:animate-none sm:max-w-md',
         className,
       )}
       {...props}
     >
       {children}
-      {showCloseButton && (
-        <SheetPrimitive.Close className="absolute top-4 right-4 opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
-          <XIcon className="size-4" />
-          <span className="sr-only">Закрыть</span>
-        </SheetPrimitive.Close>
-      )}
     </SheetPrimitive.Content>
   </SheetPortal>
 );

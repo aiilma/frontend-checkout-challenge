@@ -24,7 +24,7 @@ import { PaymentSheet } from './PaymentSheet';
 const redCards =
   'border-white/60 text-white hover:border-white focus-visible:outline-white data-[state=checked]:border-white';
 const whiteButton = 'bg-white text-ink hover:bg-white/90';
-const whiteAction = 'text-white';
+const whiteAction = 'self-start text-white';
 
 const outcomeText: Record<Payment['status'], string> = {
   pending: '',
@@ -43,6 +43,7 @@ export const PaymentPage = () => {
   const simulate = useSimulatePayment();
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [cardId, setCardId] = useState('');
+  const [cardError, setCardError] = useState<string | undefined>(undefined);
   const paymentId = attemptId ?? activeAttempt(payments)?.id ?? null;
   const { payment, error: paymentError } = usePayment(paymentId);
   const isLoading = orderLoading || paymentsLoading || sandboxLoading;
@@ -99,8 +100,17 @@ export const PaymentPage = () => {
   const selectedCard = sandbox.cards.find((card) => card.id === cardId);
 
   const pay = () => {
-    if (!payment || !selectedCard) return;
+    if (!payment) return;
+    if (!selectedCard) {
+      setCardError('Выберите карту');
+      return;
+    }
     simulate.mutate({ paymentId: payment.id, scenario: selectedCard.scenario });
+  };
+
+  const chooseCard = (id: string) => {
+    setCardId(id);
+    setCardError(undefined);
   };
 
   const cancel = () => {
@@ -110,6 +120,7 @@ export const PaymentPage = () => {
 
   const retry = () => {
     setCardId('');
+    setCardError(undefined);
     createAttempt(orderId, {
       onSuccess: (created) => {
         setAttemptId(created.id);
@@ -144,8 +155,12 @@ export const PaymentPage = () => {
             <RadioCards
               label="Тестовая карта"
               value={cardId}
-              onChange={setCardId}
+              onChange={chooseCard}
+              error={cardError}
               itemClassName={redCards}
+              labelClassName="text-white"
+              descriptionClassName="text-white"
+              errorGlyphClassName="text-white"
               options={sandbox.cards.map((card) => ({
                 value: card.id,
                 title: card.title,
@@ -156,7 +171,7 @@ export const PaymentPage = () => {
               type="button"
               variant="brand"
               className={`self-start ${whiteButton}`}
-              disabled={!selectedCard || simulate.isPending}
+              disabled={simulate.isPending}
               onClick={pay}
             >
               {simulate.isPending ? 'Отправляем…' : 'Оплатить'}
