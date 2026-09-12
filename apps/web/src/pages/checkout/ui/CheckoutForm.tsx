@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 
 import { type Cart } from '@checkout/contracts';
 
+import { type CheckoutOptions, type DeliveryMethod } from '@/entities/checkout';
 import { useCreateOrder } from '@/entities/order';
 import { applyFieldErrors } from '@/shared/lib/form-errors';
 import { formatMoney } from '@/shared/lib/money';
@@ -14,7 +15,6 @@ import { RadioCards } from '@/shared/ui/RadioCards';
 import { TextField } from '@/shared/ui/TextField';
 import { Button } from '@/shared/ui/shadcn/button';
 
-import { type CheckoutOptions, type DeliveryMethod } from '../api/checkout.api';
 import { useQuote } from '../api/use-quote';
 import { useRefreshCheckout } from '../api/use-refresh-checkout';
 import { isStaleCheckout } from '../model/checkout.errors';

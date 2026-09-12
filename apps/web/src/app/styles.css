@@ -46,6 +46,7 @@
   --animate-sheet-out: sheet-out 650ms var(--ease-panel);
   --animate-fade-in: fade-in 300ms ease-out;
   --animate-fade-out: fade-out 300ms ease-in;
+  --animate-progress: progress 1.2s linear infinite;
 
   @keyframes sheet-in {
     from {
@@ -80,6 +81,15 @@
     }
     to {
       opacity: 0;
+    }
+  }
+
+  @keyframes progress {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(300%);
     }
   }
 }

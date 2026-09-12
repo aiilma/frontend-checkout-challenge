@@ -1,10 +1,10 @@
 import { useCart } from '@/entities/cart';
+import { useCheckoutOptions } from '@/entities/checkout';
 import { ButtonLink } from '@/shared/ui/ButtonLink';
 import { ErrorBar } from '@/shared/ui/ErrorBar';
 import { PageTitle } from '@/shared/ui/PageTitle';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
 
-import { useCheckoutOptions } from '../api/use-checkout-options';
 import { CheckoutForm } from './CheckoutForm';
 
 export const CheckoutPage = () => {

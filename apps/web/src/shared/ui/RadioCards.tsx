@@ -17,6 +17,7 @@ interface RadioCardsProps {
   error?: string;
   disabled?: boolean;
   className?: string;
+  itemClassName?: string;
 }
 
 export const RadioCards = ({
@@ -27,6 +28,7 @@ export const RadioCards = ({
   error,
   disabled,
   className,
+  itemClassName,
 }: RadioCardsProps) => {
   const id = useId();
   const errorId = `${id}-error`;
@@ -42,7 +44,7 @@ export const RadioCards = ({
         disabled={disabled}
       >
         {options.map((option) => (
-          <RadioGroupItem key={option.value} value={option.value}>
+          <RadioGroupItem key={option.value} value={option.value} className={itemClassName}>
             <span className="flex flex-col">
               <span>{option.title}</span>
               {option.description && (

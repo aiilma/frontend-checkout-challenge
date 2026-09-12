@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getCheckoutOptions } from './checkout.api';
-import { checkoutKeys } from './checkout.keys';
+import { getCheckoutOptions } from './checkout-options.api';
+import { checkoutOptionsKeys } from './checkout-options.keys';
 
 export const useCheckoutOptions = () => {
   const query = useQuery({
-    queryKey: checkoutKeys.options,
+    queryKey: checkoutOptionsKeys.all,
     queryFn: ({ signal }) => getCheckoutOptions(signal),
   });
 
