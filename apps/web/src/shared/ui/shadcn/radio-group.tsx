@@ -20,7 +20,7 @@ const RadioGroupItem = ({
   <RadioGroupPrimitive.Item
     data-slot="radio-group-item"
     className={cn(
-      'flex min-h-11 w-full items-center gap-2 border border-hairline px-4 py-3 text-left text-body text-ink transition-colors outline-none hover:border-ink disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-accent data-[state=checked]:border-ink',
+      'flex min-h-11 w-full items-center gap-2 border border-hairline px-4 py-3 text-left text-body text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-accent data-[state=checked]:border-ink',
       className,
     )}
     {...props}

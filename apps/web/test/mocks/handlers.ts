@@ -1,3 +1,11 @@
-import { type RequestHandler } from 'msw';
+import { http, HttpResponse } from 'msw';
 
-export const handlers: RequestHandler[] = [];
+import { demoProducts } from '@test/factories/products';
+
+import { api, cartHandler, envelope, sessionHandler, sessionToken } from './api';
+
+export const handlers = [
+  sessionHandler(),
+  cartHandler(sessionToken),
+  http.get(api('/api/products'), () => HttpResponse.json(envelope(demoProducts))),
+];

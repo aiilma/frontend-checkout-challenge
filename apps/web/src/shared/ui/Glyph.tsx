@@ -4,6 +4,7 @@ import { cn } from '@/shared/lib/cn';
 
 const paths = {
   plus: 'M8 3v10M3 8h10',
+  minus: 'M3 8h10',
   arrow: 'M4 2v8h9M10 7l3 3-3 3',
 };
 
