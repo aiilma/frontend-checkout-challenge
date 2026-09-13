@@ -14,7 +14,7 @@ export const CatalogPage = () => {
   return (
     <>
       <PageTitle>Каталог</PageTitle>
-      {error && <ErrorBar error={error} onRetry={() => void refetch()} />}
+      {error && <ErrorBar error={error} onRetry={refetch} />}
       {isLoading ? (
         <CatalogSkeleton />
       ) : (

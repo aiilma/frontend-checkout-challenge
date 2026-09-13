@@ -11,7 +11,6 @@ export const useOrders = () => {
   const query = useQuery({
     queryKey: orderKeys.list,
     queryFn: ({ signal }) => listOrders(signal),
-    staleTime: 0,
   });
 
   return {

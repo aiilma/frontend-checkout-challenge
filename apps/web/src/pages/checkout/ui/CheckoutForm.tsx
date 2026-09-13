@@ -48,7 +48,8 @@ export const CheckoutForm = ({ cart, options }: CheckoutFormProps) => {
   });
   const deliveryValues = useWatch({ control: form.control, name: 'delivery' });
   const paymentMethod = useWatch({ control: form.control, name: 'paymentMethod' });
-  const delivery = useDebouncedValue(deliveryFrom(deliveryValues), 400);
+  const debouncedDelivery = useDebouncedValue(deliveryValues, 400);
+  const delivery = deliveryFrom(debouncedDelivery);
   const quote = useQuote(cart.version, delivery);
   const order = useCreateOrder();
   const refreshCheckout = useRefreshCheckout();
@@ -95,7 +96,7 @@ export const CheckoutForm = ({ cart, options }: CheckoutFormProps) => {
             quote={quote.quote}
             isCalculating={quote.isCalculating}
             error={quote.error}
-            onRetry={() => void quote.retry()}
+            onRetry={quote.retry}
           />
           {order.error && <ErrorBar error={order.error} />}
           {rootError && <InlineError role="alert">{rootError.message}</InlineError>}

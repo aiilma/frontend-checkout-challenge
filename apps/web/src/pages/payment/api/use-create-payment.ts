@@ -16,5 +16,10 @@ export const useCreatePayment = () => {
     },
   });
 
-  return { createAttempt: mutation.mutate, isPending: mutation.isPending, error: mutation.error };
+  return {
+    createAttempt: mutation.mutate,
+    createdId: mutation.data?.id ?? null,
+    isPending: mutation.isPending,
+    error: mutation.error,
+  };
 };

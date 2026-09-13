@@ -9,7 +9,7 @@ interface OrderSummaryProps {
   quote: Quote | undefined;
   isCalculating: boolean;
   error: ApiError | null;
-  onRetry: () => void;
+  onRetry: () => unknown;
 }
 
 export const OrderSummary = ({ cart, quote, isCalculating, error, onRetry }: OrderSummaryProps) => (
@@ -35,7 +35,7 @@ export const OrderSummary = ({ cart, quote, isCalculating, error, onRetry }: Ord
       </p>
     )}
     {error && (
-      <TextAction glyph="arrow" className="self-start" onClick={onRetry}>
+      <TextAction glyph="arrow" className="self-start" onClick={() => void onRetry()}>
         Повторить
       </TextAction>
     )}

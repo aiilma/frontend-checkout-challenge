@@ -7,7 +7,6 @@ export const useOrder = (orderId: string) => {
   const query = useQuery({
     queryKey: orderKeys.detail(orderId),
     queryFn: ({ signal }) => getOrder(orderId, signal),
-    staleTime: 0,
   });
 
   return {

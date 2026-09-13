@@ -6,14 +6,14 @@ export const outcomeLabel: Record<OrderOutcome, string> = {
   paid: 'Оплачен',
   confirmed: 'Оформлен, оплата при получении',
   pending: 'Ожидает оплаты',
-  unpaid: 'Ожидает оплаты',
+  unpaid: 'Не оплачен',
 };
 
 const outcomeHeadline: Record<OrderOutcome, string> = {
   paid: 'оплачен.',
   confirmed: 'оформлен, оплата при получении.',
   pending: 'ожидает оплаты.',
-  unpaid: 'ожидает оплаты.',
+  unpaid: 'не оплачен.',
 };
 
 export const orderOutcome = (order: Order): OrderOutcome => {

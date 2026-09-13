@@ -78,7 +78,7 @@ describe('OrderPage', () => {
     renderOrder();
 
     expect(
-      await screen.findByRole('heading', { name: 'Заказ DEMO-000001 ожидает оплаты.' }),
+      await screen.findByRole('heading', { name: 'Заказ DEMO-000001 не оплачен.' }),
     ).toBeVisible();
     expect(screen.getByRole('link', { name: 'Оплатить' })).toHaveAttribute(
       'href',
