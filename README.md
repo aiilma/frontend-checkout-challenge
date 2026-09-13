@@ -35,6 +35,18 @@ scripts/              проверки
 
 Проект использует npm workspaces. Приложение в `apps/web` назовите `@checkout/web`. Добавьте команды запуска фронтенда в README своего решения. Пока его нет, `npm run dev` запускает только API.
 
+## Фронтенд
+
+Приложение `@checkout/web` лежит в `apps/web`, подробности в [apps/web/README.md](apps/web/README.md).
+
+```sh
+npm run dev:web      # фронтенд на http://localhost:5173 при запущенном API
+npm run build:web    # сборка контрактов и фронтенда в apps/web/dist
+npm run check:web    # lint, typecheck и тесты фронтенда
+```
+
+`npm run check` проверяет и фронтенд.
+
 ## Проверки
 
 ```sh
