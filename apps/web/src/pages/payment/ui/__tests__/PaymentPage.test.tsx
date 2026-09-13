@@ -1,6 +1,6 @@
 import { screen, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { Route, Routes, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { type Order, type Payment, type Scenario } from '@checkout/contracts';
@@ -11,7 +11,7 @@ import { makeOrder } from '@test/factories/order';
 import { makePayment, sandbox, settledStatus } from '@test/factories/payment';
 import { api, envelope, errorEnvelope, errorResponse } from '@test/mocks/api';
 import { server } from '@test/mocks/server';
-import { renderWithProviders } from '@test/utils/render';
+import { renderWithRouter } from '@test/utils/render-router';
 
 import { PaymentPage } from '../PaymentPage';
 
@@ -106,11 +106,11 @@ const OrderStub = () => {
 };
 
 const renderPayment = () =>
-  renderWithProviders(
-    <Routes>
-      <Route path="/orders/:orderId/payment" element={<PaymentPage />} />
-      <Route path="/orders/:orderId" element={<OrderStub />} />
-    </Routes>,
+  renderWithRouter(
+    [
+      { path: '/orders/:orderId/payment', Component: PaymentPage },
+      { path: '/orders/:orderId', Component: OrderStub },
+    ],
     { route: '/orders/order-1/payment' },
   );
 
@@ -189,6 +189,19 @@ describe('PaymentPage', () => {
     expect(await screen.findByText('Оплата отменена.', undefined, { timeout: 4000 })).toBeVisible();
     expect(state.scenarios.get('payment-1')).toBe('cancel');
     expect(screen.getByRole('button', { name: 'Попробовать снова' })).toBeVisible();
+  });
+
+  it('уход со страницы отменяет попытку, к которой не притронулись', async () => {
+    const state = usePaymentsApi();
+    const { router } = renderPayment();
+    await screen.findByRole('radio', { name: /успешная оплата/ });
+
+    await router.navigate('/orders/order-1');
+
+    expect(await screen.findByText('Заказ order-1')).toBeVisible();
+    await waitFor(() => {
+      expect(state.scenarios.get('payment-1')).toBe('cancel');
+    });
   });
 
   it('после перезагрузки незавершённая оплата отслеживается до результата', async () => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { Navigate, useParams } from 'react-router';
+import { Navigate, useBlocker, useParams } from 'react-router';
 
 import { ButtonLink } from '@/shared/ui/ButtonLink';
 import { ErrorBar } from '@/shared/ui/ErrorBar';
@@ -53,6 +53,13 @@ export const PaymentPage = () => {
     paymentId === null &&
     !attempt.error;
   const { createAttempt, isPending: isCreating } = attempt;
+
+  useBlocker(({ currentLocation, nextLocation }) => {
+    if (payment?.status === 'pending' && currentLocation.pathname !== nextLocation.pathname) {
+      simulation.simulate({ paymentId: payment.id, scenario: 'cancel' });
+    }
+    return false;
+  });
 
   useEffect(() => {
     if (!needsAttempt || isCreating) return;
