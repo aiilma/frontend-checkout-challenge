@@ -22,6 +22,7 @@ import {
   checkoutDefaults,
   checkoutSchema,
   deliveryFrom,
+  checkoutFieldMessage,
   isCheckoutPath,
 } from '../model/checkout.schema';
 import { ContactsSection } from './ContactsSection';
@@ -72,7 +73,7 @@ export const CheckoutForm = ({ cart, options }: CheckoutFormProps) => {
         },
         onError: (error) => {
           if (isStaleCheckout(error)) void refreshCheckout();
-          applyFieldErrors(error.fields, form.setError, isCheckoutPath);
+          applyFieldErrors(error.fields, form.setError, isCheckoutPath, checkoutFieldMessage);
         },
       },
     );

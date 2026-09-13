@@ -3,23 +3,43 @@ import { z } from 'zod';
 
 import { type CreateOrder, type Delivery } from '@checkout/contracts';
 
+const fieldMessages = {
+  'customer.name': 'Введите имя',
+  'customer.email': 'Введите корректный email',
+  'customer.phone': 'Телефон в формате +79990000000',
+  'delivery.pickupPointId': 'Выберите пункт выдачи',
+  'delivery.address.city': 'Укажите город',
+  'delivery.address.street': 'Укажите улицу',
+  'delivery.address.house': 'Укажите дом',
+  'delivery.address.apartment': 'Проверьте номер квартиры',
+} as const;
+
 const customerSchema = z.object({
-  name: z.string().trim().min(2, 'Введите имя').max(100, 'Слишком длинное имя'),
-  email: z.email('Введите корректный email').max(150, 'Слишком длинный email'),
-  phone: z.string().regex(/^\+[1-9]\d{9,14}$/, 'Телефон в формате +79990000000'),
+  name: z.string().trim().min(2, fieldMessages['customer.name']).max(100, 'Слишком длинное имя'),
+  email: z.email(fieldMessages['customer.email']).max(150, 'Слишком длинный email'),
+  phone: z.string().regex(/^\+[1-9]\d{9,14}$/, fieldMessages['customer.phone']),
 });
 
 const addressSchema = z.object({
-  city: z.string().min(2, 'Укажите город').max(100, 'Слишком длинное название'),
-  street: z.string().min(2, 'Укажите улицу').max(150, 'Слишком длинное название'),
-  house: z.string().min(1, 'Укажите дом').max(20, 'Слишком длинный номер'),
-  apartment: z.string().max(20, 'Слишком длинный номер').optional(),
+  city: z
+    .string()
+    .min(2, fieldMessages['delivery.address.city'])
+    .max(100, 'Слишком длинное название'),
+  street: z
+    .string()
+    .min(2, fieldMessages['delivery.address.street'])
+    .max(150, 'Слишком длинное название'),
+  house: z
+    .string()
+    .min(1, fieldMessages['delivery.address.house'])
+    .max(20, 'Слишком длинный номер'),
+  apartment: z.string().max(20, fieldMessages['delivery.address.apartment']).optional(),
 });
 
 const deliverySchema = z.discriminatedUnion('method', [
   z.object({
     method: z.literal('pickup'),
-    pickupPointId: z.string().min(1, 'Выберите пункт выдачи'),
+    pickupPointId: z.string().min(1, fieldMessages['delivery.pickupPointId']),
   }),
   z.object({ method: z.literal('courier'), address: addressSchema }),
 ]);
@@ -93,18 +113,8 @@ export const deliveryFrom = (values: DeliveryFormValues): Delivery | null => {
   return delivery.success ? delivery.data : null;
 };
 
-const checkoutPaths = [
-  'customer.name',
-  'customer.email',
-  'customer.phone',
-  'delivery.pickupPointId',
-  'delivery.address.city',
-  'delivery.address.street',
-  'delivery.address.house',
-  'delivery.address.apartment',
-] as const satisfies readonly Path<CheckoutFormValues>[];
+type CheckoutFieldPath = Extract<Path<CheckoutFormValues>, keyof typeof fieldMessages>;
 
-const knownPaths: ReadonlySet<string> = new Set(checkoutPaths);
+export const isCheckoutPath = (path: string): path is CheckoutFieldPath => path in fieldMessages;
 
-export const isCheckoutPath = (path: string): path is Path<CheckoutFormValues> =>
-  knownPaths.has(path);
+export const checkoutFieldMessage = (path: CheckoutFieldPath) => fieldMessages[path];

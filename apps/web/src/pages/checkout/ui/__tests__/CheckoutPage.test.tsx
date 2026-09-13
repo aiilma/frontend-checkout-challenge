@@ -302,9 +302,7 @@ describe('CheckoutPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Перейти к оплате' }));
 
-    expect(
-      await screen.findByText('Сервер не принял значение. Проверьте поле и отправьте снова.'),
-    ).toBeVisible();
+    expect(await screen.findByText('Введите корректный email')).toBeVisible();
     expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
   });
 
