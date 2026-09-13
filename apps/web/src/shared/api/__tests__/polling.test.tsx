@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { api, counting, envelope, errorResponse } from '@test/mocks/api';
 import { server } from '@test/mocks/server';
@@ -14,7 +14,9 @@ interface Payment {
   status: 'processing' | 'succeeded';
 }
 
-const isSettled = (payment: Payment) => payment.status !== 'processing';
+const INTERVAL_MS = 20;
+
+const isProcessing = (payment: Payment) => payment.status === 'processing';
 
 const paymentSequence = (statuses: Payment['status'][]) => {
   const { resolve, calls } = counting(() => {
@@ -29,20 +31,26 @@ const usePayment = () =>
   useQuery({
     queryKey: ['payment', 'p1'],
     queryFn: () => request<Payment>({ method: 'GET', path: '/api/payments/p1', public: true }),
-    ...pollingOptions<Payment>(isSettled, 20),
+    ...pollingOptions<Payment>(isProcessing, INTERVAL_MS),
   });
 
-const settle = () => new Promise((resolve) => setTimeout(resolve, 120));
-
 describe('pollingOptions', () => {
-  it('опрос идёт до терминального статуса и останавливается', async () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('опрос идёт, пока статус processing, и останавливается на результате', async () => {
     const calls = paymentSequence(['processing', 'processing', 'succeeded']);
     const { result } = renderHookWithProviders(usePayment);
 
     await waitFor(() => {
       expect(result.current.data?.status).toBe('succeeded');
     });
-    await settle();
+    await vi.advanceTimersByTimeAsync(INTERVAL_MS * 5);
 
     expect(calls()).toBe(3);
   });
@@ -56,7 +64,7 @@ describe('pollingOptions', () => {
     });
     unmount();
     const atUnmount = calls();
-    await settle();
+    await vi.advanceTimersByTimeAsync(INTERVAL_MS * 5);
 
     expect(calls()).toBeLessThanOrEqual(atUnmount + 1);
   });
@@ -69,7 +77,7 @@ describe('pollingOptions', () => {
     await waitFor(() => {
       expect(result.current.isError).toBe(true);
     });
-    await settle();
+    await vi.advanceTimersByTimeAsync(INTERVAL_MS * 5);
 
     expect(calls()).toBe(1);
   });

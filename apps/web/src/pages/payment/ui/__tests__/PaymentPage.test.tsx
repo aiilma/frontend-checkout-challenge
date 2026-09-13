@@ -5,19 +5,19 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { type Order, type Payment, type Scenario } from '@checkout/contracts';
 
-import { cartWith, lampItem } from '@test/factories/cart';
-import { quoteFor } from '@test/factories/checkout';
-import { orderFor } from '@test/factories/order';
-import { paymentFor, sandbox, settledStatus } from '@test/factories/payment';
+import { makeCart, lampItem } from '@test/factories/cart';
+import { makeQuote } from '@test/factories/checkout';
+import { makeOrder } from '@test/factories/order';
+import { makePayment, sandbox, settledStatus } from '@test/factories/payment';
 import { api, envelope, errorEnvelope, errorResponse } from '@test/mocks/api';
 import { server } from '@test/mocks/server';
 import { renderWithProviders } from '@test/utils/render';
 
 import { PaymentPage } from '../PaymentPage';
 
-const cart = cartWith([lampItem]);
-const quote = quoteFor(cart, { method: 'pickup', pickupPointId: 'point-center' });
-const order = orderFor(
+const cart = makeCart([lampItem]);
+const quote = makeQuote(cart, { method: 'pickup', pickupPointId: 'point-center' });
+const order = makeOrder(
   quote,
   {
     quoteId: quote.id,
@@ -71,7 +71,7 @@ const usePaymentsApi = (initial: Payment[] = [], pollsUntilSettled = 2) => {
           status: 409,
         });
       }
-      const payment = paymentFor(order, `payment-${state.payments.length + 1}`);
+      const payment = makePayment(order, `payment-${state.payments.length + 1}`);
       state.payments.push(payment);
       return HttpResponse.json(envelope(payment), { status: 201 });
     }),
@@ -192,7 +192,7 @@ describe('PaymentPage', () => {
   });
 
   it('после перезагрузки незавершённая оплата отслеживается до результата', async () => {
-    const state = usePaymentsApi([paymentFor(order, 'payment-1', 'processing')]);
+    const state = usePaymentsApi([makePayment(order, 'payment-1', 'processing')]);
     state.scenarios.set('payment-1', 'success');
     renderPayment();
 

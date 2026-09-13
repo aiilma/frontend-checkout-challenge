@@ -1,11 +1,11 @@
 import { type Product } from '@checkout/contracts';
 
-import { isAvailable } from '@/entities/product';
 import { type ApiError } from '@/shared/api/error';
 import { cn } from '@/shared/lib/cn';
-import { Glyph } from '@/shared/ui/Glyph';
+import { InlineError } from '@/shared/ui/InlineError';
 import { MoneyText } from '@/shared/ui/MoneyText';
 import { TextAction } from '@/shared/ui/TextAction';
+import { isAvailable } from '@/entities/product';
 
 interface ProductCardProps {
   product: Product;
@@ -23,7 +23,6 @@ const captionFor = (inCart: number, canAddMore: boolean) => {
 export const ProductCard = ({ product, inCart, isAdding, addError, onAdd }: ProductCardProps) => {
   const available = isAvailable(product);
   const canAddMore = inCart < product.stock;
-  const caption = addError ? addError.message : captionFor(inCart, canAddMore);
 
   return (
     <article
@@ -41,14 +40,12 @@ export const ProductCard = ({ product, inCart, isAdding, addError, onAdd }: Prod
           <TextAction glyph="plus" onClick={onAdd} disabled={isAdding || !canAddMore}>
             {isAdding ? 'Добавляем…' : 'В корзину'}
           </TextAction>
-          <span
-            className={cn(
-              'flex min-h-5 items-center gap-1 text-caption',
-              !addError && 'text-muted',
+          <span className="flex min-h-5 items-center text-caption text-muted">
+            {addError ? (
+              <InlineError>{addError.message}</InlineError>
+            ) : (
+              captionFor(inCart, canAddMore)
             )}
-          >
-            {addError && <Glyph name="arrow" className="text-warning" />}
-            {caption}
           </span>
         </div>
       ) : (

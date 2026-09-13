@@ -1,20 +1,17 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 
 import { type Cart } from '@checkout/contracts';
 
-import { type CheckoutOptions, type DeliveryMethod } from '@/entities/checkout';
-import { useCreateOrder } from '@/entities/order';
 import { applyFieldErrors } from '@/shared/lib/form-errors';
-import { formatMoney } from '@/shared/lib/money';
 import { useDebouncedValue } from '@/shared/lib/use-debounced-value';
 import { ErrorBar } from '@/shared/ui/ErrorBar';
 import { FormSection } from '@/shared/ui/FormSection';
-import { Glyph } from '@/shared/ui/Glyph';
-import { RadioCards } from '@/shared/ui/RadioCards';
-import { TextField } from '@/shared/ui/TextField';
+import { InlineError } from '@/shared/ui/InlineError';
 import { Button } from '@/shared/ui/shadcn/button';
+import { type CheckoutOptions } from '@/entities/checkout';
+import { useCreateOrder } from '@/entities/order';
 
 import { useQuote } from '../api/use-quote';
 import { useRefreshCheckout } from '../api/use-refresh-checkout';
@@ -25,20 +22,21 @@ import {
   checkoutDefaults,
   checkoutSchema,
   deliveryFrom,
+  isCheckoutPath,
 } from '../model/checkout.schema';
+import { ContactsSection } from './ContactsSection';
+import { DeliverySection } from './DeliverySection';
 import { OrderSummary } from './OrderSummary';
+import { PaymentSection } from './PaymentSection';
 
 interface CheckoutFormProps {
   cart: Cart;
   options: CheckoutOptions;
 }
 
-const describeDelivery = (method: DeliveryMethod) => {
-  if (method.price === 0) return 'Бесплатно';
-  const price = formatMoney(method.price);
-  return method.freeFrom === null
-    ? price
-    : `${price}, бесплатно от ${formatMoney(method.freeFrom)}`;
+const submitLabel = (isPending: boolean, paymentMethod: CheckoutFormValues['paymentMethod']) => {
+  if (isPending) return 'Оформляем…';
+  return paymentMethod === 'card' ? 'Перейти к оплате' : 'Подтвердить заказ';
 };
 
 export const CheckoutForm = ({ cart, options }: CheckoutFormProps) => {
@@ -47,174 +45,68 @@ export const CheckoutForm = ({ cart, options }: CheckoutFormProps) => {
     defaultValues: checkoutDefaults,
     mode: 'onTouched',
   });
-  const { register, control, formState } = form;
-  const { errors } = formState;
-  const deliveryValues = useWatch({ control, name: 'delivery' });
-  const paymentMethod = useWatch({ control, name: 'paymentMethod' });
+  const deliveryValues = useWatch({ control: form.control, name: 'delivery' });
+  const paymentMethod = useWatch({ control: form.control, name: 'paymentMethod' });
   const delivery = useDebouncedValue(deliveryFrom(deliveryValues), 400);
-  const { quote, isCalculating, error: quoteError } = useQuote(cart.version, delivery);
-  const pickupPoints =
-    options.deliveryMethods.find((method) => method.id === 'pickup')?.pickupPoints ?? [];
-  const createOrder = useCreateOrder();
+  const quote = useQuote(cart.version, delivery);
+  const order = useCreateOrder();
   const refreshCheckout = useRefreshCheckout();
   const navigate = useNavigate();
+  const rootError = form.formState.errors.root?.quote;
 
-  const onSubmit = ({ customer, paymentMethod: method }: CheckoutOrderInput) => {
+  const handleValidSubmit = ({ customer, paymentMethod: method }: CheckoutOrderInput) => {
     form.clearErrors('root.quote');
-    if (!quote) {
+    if (!quote.quote) {
       form.setError('root.quote', { message: 'Дождитесь расчёта доставки и нажмите ещё раз.' });
       return;
     }
-    createOrder.mutate(
-      { quoteId: quote.id, customer, paymentMethod: method },
+    order.createOrder(
+      { quoteId: quote.quote.id, customer, paymentMethod: method },
       {
-        onSuccess: (order) => {
+        onSuccess: (created) => {
           void navigate(
-            order.paymentMethod === 'card' ? `/orders/${order.id}/payment` : `/orders/${order.id}`,
+            created.paymentMethod === 'card'
+              ? `/orders/${created.id}/payment`
+              : `/orders/${created.id}`,
           );
         },
         onError: (error) => {
           if (isStaleCheckout(error)) void refreshCheckout();
-          applyFieldErrors(error.fields, form.setError);
+          applyFieldErrors(error.fields, form.setError, isCheckoutPath);
         },
       },
     );
   };
 
   return (
-    <form
-      onSubmit={(event) => void form.handleSubmit(onSubmit)(event)}
-      noValidate
-      className="flex max-w-4xl flex-col gap-12"
-    >
-      <FormSection title="О вас">
-        <TextField
-          label="Имя"
-          autoComplete="name"
-          error={errors.customer?.name?.message}
-          {...register('customer.name')}
-        />
-        <TextField
-          label="Email"
-          type="email"
-          autoComplete="email"
-          error={errors.customer?.email?.message}
-          {...register('customer.email')}
-        />
-        <TextField
-          label="Телефон"
-          type="tel"
-          autoComplete="tel"
-          placeholder="+79990000000"
-          error={errors.customer?.phone?.message}
-          {...register('customer.phone')}
-        />
-      </FormSection>
-
-      <FormSection title="Доставка">
-        <Controller
-          control={control}
-          name="delivery.method"
-          render={({ field }) => (
-            <RadioCards
-              label="Способ доставки"
-              value={field.value}
-              onChange={field.onChange}
-              options={options.deliveryMethods.map((method) => ({
-                value: method.id,
-                title: method.title,
-                description: describeDelivery(method),
-              }))}
-            />
-          )}
-        />
-        {deliveryValues.method === 'pickup' ? (
-          <Controller
-            control={control}
-            name="delivery.pickupPointId"
-            render={({ field, fieldState }) => (
-              <RadioCards
-                label="Пункт выдачи"
-                value={field.value}
-                onChange={field.onChange}
-                error={fieldState.error?.message}
-                options={pickupPoints.map((point) => ({
-                  value: point.id,
-                  title: point.title,
-                  description: point.address,
-                }))}
-              />
-            )}
+    <FormProvider {...form}>
+      <form
+        onSubmit={(event) => void form.handleSubmit(handleValidSubmit)(event)}
+        noValidate
+        className="flex max-w-4xl flex-col gap-12"
+      >
+        <ContactsSection />
+        <DeliverySection methods={options.deliveryMethods} />
+        <PaymentSection methods={options.paymentMethods} />
+        <FormSection>
+          <OrderSummary
+            cart={cart}
+            quote={quote.quote}
+            isCalculating={quote.isCalculating}
+            error={quote.error}
+            onRetry={() => void quote.retry()}
           />
-        ) : (
-          <>
-            <TextField
-              label="Город"
-              autoComplete="address-level2"
-              error={errors.delivery?.address?.city?.message}
-              {...register('delivery.address.city')}
-            />
-            <TextField
-              label="Улица"
-              autoComplete="address-line1"
-              error={errors.delivery?.address?.street?.message}
-              {...register('delivery.address.street')}
-            />
-            <div className="grid grid-cols-2 gap-6">
-              <TextField
-                label="Дом"
-                error={errors.delivery?.address?.house?.message}
-                {...register('delivery.address.house')}
-              />
-              <TextField
-                label="Квартира"
-                error={errors.delivery?.address?.apartment?.message}
-                {...register('delivery.address.apartment')}
-              />
-            </div>
-          </>
-        )}
-      </FormSection>
-
-      <FormSection title="Оплата">
-        <Controller
-          control={control}
-          name="paymentMethod"
-          render={({ field }) => (
-            <RadioCards
-              label="Способ оплаты"
-              value={field.value}
-              onChange={field.onChange}
-              options={options.paymentMethods.map((method) => ({
-                value: method.id,
-                title: method.title,
-              }))}
-            />
-          )}
-        />
-      </FormSection>
-
-      <div className="flex flex-col gap-6 md:ms-[calc(200px+1.5rem)]">
-        <OrderSummary cart={cart} quote={quote} isCalculating={isCalculating} error={quoteError} />
-        {createOrder.error && <ErrorBar error={createOrder.error} />}
-        {errors.root?.quote && (
-          <p role="alert" className="flex items-center gap-1 text-caption">
-            <Glyph name="arrow" className="text-warning" />
-            {errors.root.quote.message}
-          </p>
-        )}
-        <Button
-          type="submit"
-          className="self-start"
-          disabled={isCalculating || createOrder.isPending}
-        >
-          {createOrder.isPending
-            ? 'Оформляем…'
-            : paymentMethod === 'card'
-              ? 'Перейти к оплате'
-              : 'Подтвердить заказ'}
-        </Button>
-      </div>
-    </form>
+          {order.error && <ErrorBar error={order.error} />}
+          {rootError && <InlineError role="alert">{rootError.message}</InlineError>}
+          <Button
+            type="submit"
+            className="self-start"
+            disabled={quote.isCalculating || order.isPending}
+          >
+            {submitLabel(order.isPending, paymentMethod)}
+          </Button>
+        </FormSection>
+      </form>
+    </FormProvider>
   );
 };

@@ -1,8 +1,7 @@
 import { useId } from 'react';
 
 import { cn } from '@/shared/lib/cn';
-
-import { Glyph } from '@/shared/ui/Glyph';
+import { InlineError, type Tone } from '@/shared/ui/InlineError';
 import { RadioGroup, RadioGroupItem } from '@/shared/ui/shadcn/radio-group';
 
 export interface RadioCardOption {
@@ -17,13 +16,22 @@ interface RadioCardsProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
-  disabled?: boolean;
+  tone?: Tone;
   className?: string;
-  itemClassName?: string;
-  labelClassName?: string;
-  descriptionClassName?: string;
-  errorGlyphClassName?: string;
 }
+
+const toneClasses = {
+  default: {
+    label: 'text-muted',
+    item: '',
+    description: 'text-muted',
+  },
+  inverse: {
+    label: 'text-white',
+    item: 'border-white/60 text-white hover:border-white focus-visible:outline-white data-[state=checked]:border-white',
+    description: 'text-white',
+  },
+} satisfies Record<Tone, Record<'label' | 'item' | 'description', string>>;
 
 export const RadioCards = ({
   label,
@@ -31,20 +39,17 @@ export const RadioCards = ({
   value,
   onChange,
   error,
-  disabled,
+  tone = 'default',
   className,
-  itemClassName,
-  labelClassName = 'text-muted',
-  descriptionClassName = 'text-muted',
-  errorGlyphClassName = 'text-warning',
 }: RadioCardsProps) => {
   const id = useId();
   const labelId = `${id}-label`;
   const errorId = `${id}-error`;
+  const classes = toneClasses[tone];
 
   return (
     <div className={className}>
-      <span id={labelId} className={cn('mb-2 block text-caption', labelClassName)}>
+      <span id={labelId} className={cn('mb-2 block text-caption', classes.label)}>
         {label}
       </span>
       <RadioGroup
@@ -53,14 +58,13 @@ export const RadioCards = ({
         aria-describedby={error ? errorId : undefined}
         value={value}
         onValueChange={onChange}
-        disabled={disabled}
       >
         {options.map((option) => (
-          <RadioGroupItem key={option.value} value={option.value} className={itemClassName}>
+          <RadioGroupItem key={option.value} value={option.value} className={classes.item}>
             <span className="flex flex-col">
               <span>{option.title}</span>
-              {option.description && (
-                <span className={cn('text-caption', descriptionClassName)}>
+              {option.description !== undefined && (
+                <span className={cn('text-caption', classes.description)}>
                   {option.description}
                 </span>
               )}
@@ -69,10 +73,9 @@ export const RadioCards = ({
         ))}
       </RadioGroup>
       {error && (
-        <span id={errorId} className="mt-2 flex items-center gap-1 text-caption">
-          <Glyph name="arrow" className={errorGlyphClassName} />
+        <InlineError id={errorId} tone={tone} className="mt-2">
           {error}
-        </span>
+        </InlineError>
       )}
     </div>
   );

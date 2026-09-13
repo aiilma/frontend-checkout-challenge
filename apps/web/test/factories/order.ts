@@ -1,6 +1,6 @@
 import { type CreateOrder, type Order, type Quote } from '@checkout/contracts';
 
-export const orderFor = (quote: Quote, body: CreateOrder, id = 'order-1'): Order => ({
+export const makeOrder = (quote: Quote, body: CreateOrder, id = 'order-1'): Order => ({
   id,
   number: 'DEMO-000001',
   status: body.paymentMethod === 'card' ? 'awaiting_payment' : 'confirmed',

@@ -5,9 +5,15 @@ import { cartKeys } from './cart.keys';
 
 export const useSetCartItem = () => {
   const queryClient = useQueryClient();
-
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: setCartItem,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: cartKeys.all }),
   });
+
+  return {
+    setItem: mutation.mutate,
+    isPending: mutation.isPending,
+    error: mutation.error,
+    productId: mutation.variables?.productId ?? null,
+  };
 };

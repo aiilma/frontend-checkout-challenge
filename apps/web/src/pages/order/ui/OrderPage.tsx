@@ -1,26 +1,12 @@
-import { type Order } from '@checkout/contracts';
-
 import { useParams } from 'react-router';
 
-import { describeDelivery, useCheckoutOptions } from '@/entities/checkout';
-import { type OrderOutcome, orderOutcome, useOrder } from '@/entities/order';
 import { ButtonLink } from '@/shared/ui/ButtonLink';
 import { ErrorBar } from '@/shared/ui/ErrorBar';
 import { MoneyText } from '@/shared/ui/MoneyText';
+import { PageTitle } from '@/shared/ui/PageTitle';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
-
-const headlineFor = (order: Order, outcome: OrderOutcome) => {
-  switch (outcome) {
-    case 'paid':
-      return `Заказ ${order.number} оплачен.`;
-    case 'confirmed':
-      return `Заказ ${order.number} оформлен, оплата при получении.`;
-    case 'pending':
-      return `Заказ ${order.number} ожидает оплаты.`;
-    case 'unpaid':
-      return `Заказ ${order.number} ожидает оплаты.`;
-  }
-};
+import { describeDelivery, useCheckoutOptions } from '@/entities/checkout';
+import { needsPayment, orderHeadline, orderOutcome, useOrder } from '@/entities/order';
 
 export const OrderPage = () => {
   const { orderId = '' } = useParams();
@@ -41,21 +27,20 @@ export const OrderPage = () => {
   if (!order) {
     return (
       <>
-        <h1 className="mb-12 text-title">Заказ</h1>
+        <PageTitle>Заказ</PageTitle>
         {error && <ErrorBar error={error} onRetry={() => void refetch()} />}
       </>
     );
   }
 
   const outcome = orderOutcome(order);
-  const paymentPath = `/orders/${order.id}/payment`;
 
   return (
     <>
-      <h1 className="mb-12 text-display">{headlineFor(order, outcome)}</h1>
-      {(outcome === 'unpaid' || outcome === 'pending') && (
+      <PageTitle className="text-display">{orderHeadline(order, outcome)}</PageTitle>
+      {needsPayment(outcome) && (
         <div className="mb-12">
-          <ButtonLink to={paymentPath}>
+          <ButtonLink to={`/orders/${order.id}/payment`}>
             {outcome === 'pending' ? 'Продолжить оплату' : 'Оплатить'}
           </ButtonLink>
         </div>

@@ -1,10 +1,10 @@
-import { useCart, useRemoveCartItem, useSetCartItem } from '@/entities/cart';
-import { useProducts } from '@/entities/product';
 import { indexBy } from '@/shared/lib/index-by';
 import { ButtonLink } from '@/shared/ui/ButtonLink';
 import { ErrorBar } from '@/shared/ui/ErrorBar';
 import { MoneyText } from '@/shared/ui/MoneyText';
 import { PageTitle } from '@/shared/ui/PageTitle';
+import { useCart, useRemoveCartItem, useSetCartItem } from '@/entities/cart';
+import { useProducts } from '@/entities/product';
 
 import { CartRow } from './CartRow';
 import { CartSkeleton } from './CartSkeleton';
@@ -13,10 +13,18 @@ export const CartPage = () => {
   const { cart, items, isLoading, error, refetch } = useCart();
   const { products } = useProducts();
   const productsById = indexBy(products, (product) => product.id);
-  const setItem = useSetCartItem();
-  const removeItem = useRemoveCartItem();
-  const settingId = setItem.variables?.productId;
-  const removingId = removeItem.variables;
+  const setting = useSetCartItem();
+  const removing = useRemoveCartItem();
+
+  const rowErrorFor = (productId: string) => {
+    if (setting.productId === productId) return setting.error;
+    if (removing.productId === productId) return removing.error;
+    return null;
+  };
+
+  const isRowBusy = (productId: string) =>
+    (setting.productId === productId && setting.isPending) ||
+    (removing.productId === productId && removing.isPending);
 
   if (isLoading) {
     return (
@@ -64,21 +72,18 @@ export const CartPage = () => {
         <tbody>
           {items.map((item) => {
             const stock = productsById.get(item.productId)?.stock;
-            const isSetting = settingId === item.productId;
-            const isRemoving = removingId === item.productId;
-            const rowError = isSetting ? setItem.error : isRemoving ? removeItem.error : null;
             return (
               <CartRow
                 key={item.productId}
                 item={item}
                 canAddMore={stock === undefined || item.quantity < stock}
-                isBusy={(isSetting && setItem.isPending) || (isRemoving && removeItem.isPending)}
-                error={rowError}
+                isBusy={isRowBusy(item.productId)}
+                error={rowErrorFor(item.productId)}
                 onQuantity={(quantity) => {
-                  setItem.mutate({ productId: item.productId, quantity });
+                  setting.setItem({ productId: item.productId, quantity });
                 }}
                 onRemove={() => {
-                  removeItem.mutate(item.productId);
+                  removing.removeItem(item.productId);
                 }}
               />
             );

@@ -1,6 +1,7 @@
+import { type ReactNode } from 'react';
+
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
-import { type ReactNode } from 'react';
 
 import { createTestQueryClient } from './query-client';
 

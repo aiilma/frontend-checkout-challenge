@@ -9,8 +9,15 @@ interface ButtonLinkProps extends LinkProps, VariantProps<typeof buttonVariants>
   glyph?: 'plus' | 'arrow';
 }
 
-export const ButtonLink = ({ variant, glyph, className, children, ...props }: ButtonLinkProps) => (
-  <Link className={cn(buttonVariants({ variant }), className)} {...props}>
+export const ButtonLink = ({
+  variant,
+  tone,
+  glyph,
+  className,
+  children,
+  ...props
+}: ButtonLinkProps) => (
+  <Link className={cn(buttonVariants({ variant, tone }), className)} {...props}>
     {glyph && <Glyph name={glyph} />}
     {children}
   </Link>

@@ -1,3 +1,8 @@
+import { type AxiosResponse } from 'axios';
+import { type Static } from '@sinclair/typebox';
+
+import { type SessionSchema } from '@checkout/contracts';
+
 import { client } from './client';
 import { parseEnvelope } from './envelope';
 import { toApiError } from './error';
@@ -21,9 +26,12 @@ interface WriteEndpoint extends EndpointBase {
 
 export type Endpoint = ReadEndpoint | WriteEndpoint;
 
-interface Session {
-  token: string;
+export interface ApiResponse<T> {
+  data: T;
+  retryAfterMs: number | null;
 }
+
+type Session = Static<typeof SessionSchema>;
 
 const headersFor = (endpoint: Endpoint, token: string | null) => ({
   ...(token === null ? {} : { Authorization: `Bearer ${token}` }),
@@ -32,7 +40,13 @@ const headersFor = (endpoint: Endpoint, token: string | null) => ({
     : {}),
 });
 
-const send = async <T>(endpoint: Endpoint, token: string | null): Promise<T> => {
+const retryAfterOf = (response: AxiosResponse<unknown>) => {
+  const header: unknown = response.headers['retry-after'];
+  const seconds = typeof header === 'string' ? Number(header) : Number.NaN;
+  return Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : null;
+};
+
+const send = async <T>(endpoint: Endpoint, token: string | null): Promise<ApiResponse<T>> => {
   const { method, path, signal } = endpoint;
   const data = 'body' in endpoint ? endpoint.body : undefined;
   try {
@@ -43,7 +57,7 @@ const send = async <T>(endpoint: Endpoint, token: string | null): Promise<T> => 
       headers: headersFor(endpoint, token),
       signal,
     });
-    return parseEnvelope(response) as T;
+    return { data: parseEnvelope(response) as T, retryAfterMs: retryAfterOf(response) };
   } catch (error) {
     throw toApiError(error);
   }
@@ -51,10 +65,10 @@ const send = async <T>(endpoint: Endpoint, token: string | null): Promise<T> => 
 
 const createSession = () =>
   send<Session>({ method: 'POST', path: '/api/sessions', body: {}, public: true }, null).then(
-    (session) => session.token,
+    ({ data }) => data.token,
   );
 
-export const request = async <T>(endpoint: Endpoint): Promise<T> => {
+export const requestWithMeta = async <T>(endpoint: Endpoint): Promise<ApiResponse<T>> => {
   if (endpoint.public) return send<T>(endpoint, null);
   try {
     return await send<T>(endpoint, await ensureToken(createSession));
@@ -63,3 +77,6 @@ export const request = async <T>(endpoint: Endpoint): Promise<T> => {
     return send<T>(endpoint, await renewToken(createSession));
   }
 };
+
+export const request = <T>(endpoint: Endpoint): Promise<T> =>
+  requestWithMeta<T>(endpoint).then(({ data }) => data);

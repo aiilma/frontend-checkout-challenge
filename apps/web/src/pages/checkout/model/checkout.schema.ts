@@ -1,6 +1,7 @@
+import { type Path } from 'react-hook-form';
 import { z } from 'zod';
 
-import { type Delivery } from '@checkout/contracts';
+import { type CreateOrder, type Delivery } from '@checkout/contracts';
 
 const customerSchema = z.object({
   name: z.string().trim().min(2, 'Введите имя').max(100, 'Слишком длинное имя'),
@@ -9,14 +10,10 @@ const customerSchema = z.object({
 });
 
 const addressSchema = z.object({
-  city: z.string().trim().min(2, 'Укажите город').max(100, 'Слишком длинное название'),
-  street: z.string().trim().min(2, 'Укажите улицу').max(150, 'Слишком длинное название'),
-  house: z.string().trim().min(1, 'Укажите дом').max(20, 'Слишком длинный номер'),
-  apartment: z
-    .string()
-    .trim()
-    .max(20, 'Слишком длинный номер')
-    .transform((apartment) => (apartment === '' ? undefined : apartment)),
+  city: z.string().min(2, 'Укажите город').max(100, 'Слишком длинное название'),
+  street: z.string().min(2, 'Укажите улицу').max(150, 'Слишком длинное название'),
+  house: z.string().min(1, 'Укажите дом').max(20, 'Слишком длинный номер'),
+  apartment: z.string().max(20, 'Слишком длинный номер').optional(),
 });
 
 const deliverySchema = z.discriminatedUnion('method', [
@@ -28,7 +25,7 @@ const deliverySchema = z.discriminatedUnion('method', [
 ]);
 
 const deliveryFormSchema = z.object({
-  method: z.enum(['pickup', 'courier']),
+  method: z.enum(['pickup', 'courier']) satisfies z.ZodType<Delivery['method']>,
   pickupPointId: z.string(),
   address: z.object({
     city: z.string(),
@@ -38,7 +35,26 @@ const deliveryFormSchema = z.object({
   }),
 });
 
-export const paymentMethodSchema = z.enum(['card', 'cash_on_delivery']);
+export const paymentMethodSchema = z.enum(['card', 'cash_on_delivery']) satisfies z.ZodType<
+  CreateOrder['paymentMethod']
+>;
+
+type DeliveryFormValues = z.input<typeof deliveryFormSchema>;
+
+const normalizeDelivery = ({ method, pickupPointId, address }: DeliveryFormValues) => {
+  const apartment = address.apartment.trim();
+  return method === 'pickup'
+    ? { method, pickupPointId }
+    : {
+        method,
+        address: {
+          city: address.city.trim(),
+          street: address.street.trim(),
+          house: address.house.trim(),
+          apartment: apartment === '' ? undefined : apartment,
+        },
+      };
+};
 
 export const checkoutSchema = z
   .object({
@@ -47,7 +63,7 @@ export const checkoutSchema = z
     paymentMethod: paymentMethodSchema,
   })
   .superRefine((values, ctx) => {
-    const delivery = deliverySchema.safeParse(values.delivery);
+    const delivery = deliverySchema.safeParse(normalizeDelivery(values.delivery));
     if (delivery.success) return;
     for (const issue of delivery.error.issues) {
       ctx.addIssue({ code: 'custom', message: issue.message, path: ['delivery', ...issue.path] });
@@ -55,7 +71,7 @@ export const checkoutSchema = z
   })
   .transform((values) => ({
     customer: values.customer,
-    delivery: deliverySchema.parse(values.delivery),
+    delivery: normalizeDelivery(values.delivery) as Delivery,
     paymentMethod: values.paymentMethod,
   }));
 
@@ -72,7 +88,23 @@ export const checkoutDefaults: CheckoutFormValues = {
   paymentMethod: 'card',
 };
 
-export const deliveryFrom = (values: CheckoutFormValues['delivery']): Delivery | null => {
-  const delivery = deliverySchema.safeParse(values);
+export const deliveryFrom = (values: DeliveryFormValues): Delivery | null => {
+  const delivery = deliverySchema.safeParse(normalizeDelivery(values));
   return delivery.success ? delivery.data : null;
 };
+
+const checkoutPaths = [
+  'customer.name',
+  'customer.email',
+  'customer.phone',
+  'delivery.pickupPointId',
+  'delivery.address.city',
+  'delivery.address.street',
+  'delivery.address.house',
+  'delivery.address.apartment',
+] as const satisfies readonly Path<CheckoutFormValues>[];
+
+const knownPaths: ReadonlySet<string> = new Set(checkoutPaths);
+
+export const isCheckoutPath = (path: string): path is Path<CheckoutFormValues> =>
+  knownPaths.has(path);

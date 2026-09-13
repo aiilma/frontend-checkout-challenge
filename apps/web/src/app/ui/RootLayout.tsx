@@ -1,10 +1,11 @@
 import { NavLink, Outlet } from 'react-router';
 
-import { useCart } from '@/entities/cart';
+import { hoverUnderline } from '@/shared/lib/classes';
 import { cn } from '@/shared/lib/cn';
+import { useCart } from '@/entities/cart';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  isActive ? 'font-medium' : 'hover:underline hover:underline-offset-2';
+  isActive ? 'font-medium' : hoverUnderline;
 
 const cartLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(navLinkClass({ isActive }), 'flex gap-1');

@@ -9,8 +9,10 @@ const toFormPath = (path: string) => path.replace(/^body\//, '').replaceAll('/',
 export const applyFieldErrors = <T extends FieldValues>(
   fields: ApiErrorField[],
   setError: UseFormSetError<T>,
+  isFormPath: (path: string) => path is Path<T>,
 ) => {
   for (const field of fields) {
-    setError(toFormPath(field.path) as Path<T>, { type: 'server', message: SERVER_FIELD_MESSAGE });
+    const path = toFormPath(field.path);
+    if (isFormPath(path)) setError(path, { type: 'server', message: SERVER_FIELD_MESSAGE });
   }
 };

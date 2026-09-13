@@ -6,29 +6,29 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { type CreateOrder, type Delivery, type Quote } from '@checkout/contracts';
 
-import { cartWith, lampItem, mugItem } from '@test/factories/cart';
-import { checkoutOptions, quoteFor } from '@test/factories/checkout';
-import { orderFor } from '@test/factories/order';
-import { api, envelope, errorEnvelope } from '@test/mocks/api';
+import { makeCart, lampItem, mugItem } from '@test/factories/cart';
+import { makeCheckoutOptions, makeQuote } from '@test/factories/checkout';
+import { makeOrder } from '@test/factories/order';
+import { api, counting, envelope, errorEnvelope, errorResponse } from '@test/mocks/api';
 import { server } from '@test/mocks/server';
 import { renderWithProviders } from '@test/utils/render';
 
 import { CheckoutPage } from '../CheckoutPage';
 
-const cart = cartWith([{ ...lampItem, quantity: 1, lineTotal: 249000 }, mugItem]);
+const cart = makeCart([{ ...lampItem, quantity: 1, lineTotal: 249000 }, mugItem]);
 
 const useCheckoutState = () => {
   const quotes: Quote[] = [];
   server.use(
     http.get(api('/api/cart'), () => HttpResponse.json(envelope(cart))),
     http.get(api('/api/checkout/options'), () =>
-      HttpResponse.json(envelope(checkoutOptions(cart))),
+      HttpResponse.json(envelope(makeCheckoutOptions(cart))),
     ),
     http.post<never, { cartVersion: number; delivery: Delivery }>(
       api('/api/quotes'),
       async ({ request }) => {
         const body = await request.json();
-        const quote = quoteFor(cart, body.delivery, `quote-${quotes.length + 1}`);
+        const quote = makeQuote(cart, body.delivery, `quote-${quotes.length + 1}`);
         quotes.push(quote);
         return HttpResponse.json(envelope(quote), { status: 201 });
       },
@@ -88,7 +88,7 @@ const useOrdersApi = (quotes: Quote[], responses: (() => Response | null)[] = []
       const quote = quotes.find((candidate) => candidate.id === body.quoteId);
       if (!quote)
         return HttpResponse.json(errorEnvelope('QUOTE_NOT_FOUND', 'Нет'), { status: 404 });
-      return HttpResponse.json(envelope(orderFor(quote, body, `order-${log.bodies.length}`)), {
+      return HttpResponse.json(envelope(makeOrder(quote, body, `order-${log.bodies.length}`)), {
         status: 201,
       });
     }),
@@ -138,6 +138,64 @@ describe('CheckoutPage', () => {
       method: 'courier',
       address: { city: 'Учебный', street: 'Примерная', house: '10' },
     });
+  });
+
+  it('конфликт версии корзины при расчёте перечитывает корзину и повторяет расчёт', async () => {
+    useCheckoutState();
+    const cartCalls = counting(() => HttpResponse.json(envelope(cart)));
+    const quoteCalls = counting(() =>
+      quoteCalls.calls() === 1
+        ? errorResponse(409, 'CART_VERSION_CONFLICT', 'Корзина изменилась. Обновите расчёт.')
+        : undefined,
+    );
+    server.use(
+      http.get(api('/api/cart'), cartCalls.resolve),
+      http.post(api('/api/quotes'), quoteCalls.resolve),
+    );
+    const { user } = renderWithProviders(<CheckoutPage />);
+    await screen.findByRole('radio', { name: /Самовывоз/ });
+    await user.type(screen.getByLabelText('Имя'), 'Тестовый Покупатель');
+
+    await user.click(screen.getByRole('radio', { name: /Центральный пункт/ }));
+
+    await waitFor(() => {
+      expect(summary().getByText('Итого')).toBeVisible();
+    });
+    expect(quoteCalls.calls()).toBe(2);
+    expect(cartCalls.calls()).toBeGreaterThanOrEqual(2);
+    expect(screen.getByLabelText('Имя')).toHaveValue('Тестовый Покупатель');
+  });
+
+  it('сбой расчёта показывает ошибку в итоге и повторяется по действию', async () => {
+    useCheckoutState();
+    const quoteCalls = counting(() =>
+      quoteCalls.calls() === 1 ? errorResponse(500, 'INTERNAL_ERROR', 'Сбой расчёта.') : undefined,
+    );
+    server.use(http.post(api('/api/quotes'), quoteCalls.resolve));
+    const { user } = renderWithProviders(<CheckoutPage />);
+    await screen.findByRole('radio', { name: /Самовывоз/ });
+
+    await user.click(screen.getByRole('radio', { name: /Центральный пункт/ }));
+
+    expect(await summary().findByText('Сбой расчёта.')).toBeVisible();
+    await user.click(summary().getByRole('button', { name: 'Повторить' }));
+
+    await waitFor(() => {
+      expect(summary().getByText('Итого')).toBeVisible();
+    });
+    expect(quoteCalls.calls()).toBe(2);
+  });
+
+  it('некорректный email подсвечивается после ухода из поля, до отправки', async () => {
+    useCheckoutState();
+    const { user } = renderWithProviders(<CheckoutPage />);
+    await screen.findByRole('radio', { name: /Самовывоз/ });
+
+    await user.type(screen.getByLabelText('Email'), '43');
+    await user.tab();
+
+    expect(await screen.findByText('Введите корректный email')).toBeVisible();
+    expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
   });
 
   it('некорректный телефон не отправляется и подсвечивается у поля', async () => {
@@ -268,7 +326,7 @@ describe('CheckoutPage', () => {
   });
 
   it('пустая корзина не даёт оформить заказ', async () => {
-    server.use(http.get(api('/api/cart'), () => HttpResponse.json(envelope(cartWith([])))));
+    server.use(http.get(api('/api/cart'), () => HttpResponse.json(envelope(makeCart([])))));
     renderWithProviders(<CheckoutPage />);
 
     expect(await screen.findByText('В корзине пусто.')).toBeVisible();

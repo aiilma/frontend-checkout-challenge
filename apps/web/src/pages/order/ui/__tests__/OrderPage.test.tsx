@@ -5,9 +5,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { type Order } from '@checkout/contracts';
 
-import { cartWith, lampItem, mugItem } from '@test/factories/cart';
-import { quoteFor } from '@test/factories/checkout';
-import { orderFor } from '@test/factories/order';
+import { makeCart, lampItem, mugItem } from '@test/factories/cart';
+import { makeQuote } from '@test/factories/checkout';
+import { makeOrder } from '@test/factories/order';
 import { api, envelope } from '@test/mocks/api';
 import { server } from '@test/mocks/server';
 import { createTestQueryClient } from '@test/utils/query-client';
@@ -17,7 +17,7 @@ import { orderKeys } from '@/entities/order';
 
 import { OrderPage } from '../OrderPage';
 
-const quote = quoteFor(cartWith([lampItem, mugItem]), {
+const quote = makeQuote(makeCart([lampItem, mugItem]), {
   method: 'pickup',
   pickupPointId: 'point-center',
 });
@@ -26,7 +26,7 @@ const customer = {
   email: 'buyer@example.test',
   phone: '+79990000000',
 };
-const cardOrder = orderFor(quote, { quoteId: quote.id, customer, paymentMethod: 'card' });
+const cardOrder = makeOrder(quote, { quoteId: quote.id, customer, paymentMethod: 'card' });
 
 const serveOrder = (order: Order) => {
   server.use(http.get(api('/api/orders/order-1'), () => HttpResponse.json(envelope(order))));
@@ -60,7 +60,9 @@ describe('OrderPage', () => {
   });
 
   it('заказ за наличные подтверждён без онлайн-оплаты', async () => {
-    serveOrder(orderFor(quote, { quoteId: quote.id, customer, paymentMethod: 'cash_on_delivery' }));
+    serveOrder(
+      makeOrder(quote, { quoteId: quote.id, customer, paymentMethod: 'cash_on_delivery' }),
+    );
     renderOrder();
 
     expect(
@@ -90,6 +92,8 @@ describe('OrderPage', () => {
     serveOrder({ ...cardOrder, status: 'paid', paymentStatus: 'succeeded' });
     renderOrder(queryClient);
 
+    expect(screen.getByText('Проверяем заказ')).toBeInTheDocument();
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
     expect(
       await screen.findByRole('heading', { name: 'Заказ DEMO-000001 оплачен.' }),
     ).toBeVisible();

@@ -1,7 +1,7 @@
+export { useCheckoutOptions } from './api/use-checkout-options';
 export {
   type CheckoutOptions,
   type DeliveryMethod,
   type PaymentMethod,
-} from './api/checkout-options.api';
-export { useCheckoutOptions } from './api/use-checkout-options';
+} from './model/checkout-options.types';
 export { describeDelivery } from './model/delivery';

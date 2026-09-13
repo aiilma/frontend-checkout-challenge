@@ -5,10 +5,17 @@ import { paymentKeys } from './payment.keys';
 
 export const useSimulatePayment = () => {
   const queryClient = useQueryClient();
-
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: simulatePayment,
-    onSuccess: (_simulation, { paymentId }: SimulationInput) =>
+    onSuccess: (_result, { paymentId }: SimulationInput) =>
       queryClient.invalidateQueries({ queryKey: paymentKeys.detail(paymentId) }),
   });
+
+  return {
+    simulate: mutation.mutate,
+    isPending: mutation.isPending,
+    error: mutation.error,
+    scenario: mutation.data?.data.scenario ?? null,
+    retryAfterMs: mutation.data?.retryAfterMs ?? null,
+  };
 };

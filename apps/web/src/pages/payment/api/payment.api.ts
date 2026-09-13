@@ -1,18 +1,8 @@
 import { type Payment, type Scenario, type Simulation } from '@checkout/contracts';
 
-import { request } from '@/shared/api/request';
+import { request, requestWithMeta } from '@/shared/api/request';
 
-export interface SandboxCard {
-  id: string;
-  title: string;
-  maskedNumber: string;
-  scenario: 'success' | 'decline';
-}
-
-export interface Sandbox {
-  settlementDelayMs: number;
-  cards: SandboxCard[];
-}
+import { type Sandbox } from '../model/sandbox.types';
 
 export interface SimulationInput {
   paymentId: string;
@@ -34,7 +24,7 @@ export const createPayment = (orderId: string, idempotencyKey: string) =>
   });
 
 export const simulatePayment = ({ paymentId, scenario }: SimulationInput) =>
-  request<Simulation>({
+  requestWithMeta<Simulation>({
     method: 'POST',
     path: `/api/payments/${paymentId}/simulations`,
     body: { scenario },

@@ -18,7 +18,7 @@ export const sandbox = {
   ],
 };
 
-export const paymentFor = (
+export const makePayment = (
   order: Order,
   id: string,
   status: Payment['status'] = 'pending',
@@ -32,5 +32,10 @@ export const paymentFor = (
   failureCode: status === 'failed' ? 'CARD_DECLINED' : null,
 });
 
-export const settledStatus = (scenario: Scenario): Payment['status'] =>
-  scenario === 'success' ? 'succeeded' : scenario === 'decline' ? 'failed' : 'cancelled';
+const settledStatuses: Record<Scenario, Payment['status']> = {
+  success: 'succeeded',
+  decline: 'failed',
+  cancel: 'cancelled',
+};
+
+export const settledStatus = (scenario: Scenario) => settledStatuses[scenario];

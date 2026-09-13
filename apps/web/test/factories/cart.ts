@@ -18,7 +18,7 @@ export const mugItem: CartItem = {
   lineTotal: 89000,
 };
 
-export const cartWith = (items: CartItem[], version = items.length): Cart => {
+export const makeCart = (items: CartItem[], version = items.length): Cart => {
   let quantity = 0;
   let subtotal = 0;
   for (const item of items) {

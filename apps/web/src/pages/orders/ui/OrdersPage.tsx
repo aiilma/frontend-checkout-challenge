@@ -1,12 +1,13 @@
 import { Link } from 'react-router';
 
-import { orderOutcome, outcomeLabel, useOrders } from '@/entities/order';
+import { hoverUnderline } from '@/shared/lib/classes';
 import { formatDateTime } from '@/shared/lib/date';
 import { ButtonLink } from '@/shared/ui/ButtonLink';
 import { ErrorBar } from '@/shared/ui/ErrorBar';
 import { MoneyText } from '@/shared/ui/MoneyText';
 import { PageTitle } from '@/shared/ui/PageTitle';
 import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+import { orderOutcome, outcomeLabel, useOrders } from '@/entities/order';
 
 export const OrdersPage = () => {
   const { orders, isLoading, error, refetch } = useOrders();
@@ -62,10 +63,7 @@ export const OrdersPage = () => {
           {orders.map((order) => (
             <tr key={order.id} className="border-b border-hairline align-top">
               <th scope="row" className="py-3 pe-3 text-start font-normal">
-                <Link
-                  to={`/orders/${order.id}`}
-                  className="hover:underline hover:underline-offset-2"
-                >
+                <Link to={`/orders/${order.id}`} className={hoverUnderline}>
                   {order.number}
                 </Link>
                 <span className="block text-caption text-muted">

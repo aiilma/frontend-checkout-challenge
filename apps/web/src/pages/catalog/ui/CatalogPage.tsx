@@ -1,7 +1,7 @@
-import { useCart, useSetCartItem } from '@/entities/cart';
-import { useProducts } from '@/entities/product';
 import { ErrorBar } from '@/shared/ui/ErrorBar';
 import { PageTitle } from '@/shared/ui/PageTitle';
+import { useCart, useSetCartItem } from '@/entities/cart';
+import { useProducts } from '@/entities/product';
 
 import { CatalogSkeleton } from './CatalogSkeleton';
 import { ProductCard } from './ProductCard';
@@ -9,8 +9,7 @@ import { ProductCard } from './ProductCard';
 export const CatalogPage = () => {
   const { products, isLoading, error, refetch } = useProducts();
   const { itemsById } = useCart();
-  const setItem = useSetCartItem();
-  const targetId = setItem.variables?.productId;
+  const adding = useSetCartItem();
 
   return (
     <>
@@ -22,16 +21,16 @@ export const CatalogPage = () => {
         <ul className="grid gap-5 md:grid-cols-3">
           {products.map((product) => {
             const inCart = itemsById.get(product.id)?.quantity ?? 0;
-            const isTarget = targetId === product.id;
+            const isTarget = adding.productId === product.id;
             return (
               <li key={product.id}>
                 <ProductCard
                   product={product}
                   inCart={inCart}
-                  isAdding={isTarget && setItem.isPending}
-                  addError={isTarget ? setItem.error : null}
+                  isAdding={isTarget && adding.isPending}
+                  addError={isTarget ? adding.error : null}
                   onAdd={() => {
-                    setItem.mutate({ productId: product.id, quantity: inCart + 1 });
+                    adding.setItem({ productId: product.id, quantity: inCart + 1 });
                   }}
                 />
               </li>

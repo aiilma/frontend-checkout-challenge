@@ -19,9 +19,9 @@ export const paymentMethods = [
   { id: 'cash_on_delivery' as const, title: 'Наличными при получении' },
 ];
 
-export const checkoutOptions = (cart: Cart) => ({ cart, deliveryMethods, paymentMethods });
+export const makeCheckoutOptions = (cart: Cart) => ({ cart, deliveryMethods, paymentMethods });
 
-export const quoteFor = (cart: Cart, delivery: Delivery, id = 'quote-1'): Quote => {
+export const makeQuote = (cart: Cart, delivery: Delivery, id = 'quote-1'): Quote => {
   const shipping = delivery.method === 'courier' && cart.subtotal < 500000 ? 39000 : 0;
   return {
     id,

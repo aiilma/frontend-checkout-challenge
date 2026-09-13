@@ -1,6 +1,6 @@
 import { type Delivery } from '@checkout/contracts';
 
-import { type DeliveryMethod } from '../api/checkout-options.api';
+import { type DeliveryMethod } from './checkout-options.types';
 
 export const describeDelivery = (delivery: Delivery, methods: DeliveryMethod[] | undefined) => {
   const method = methods?.find((candidate) => candidate.id === delivery.method);

@@ -25,7 +25,7 @@ const mug: CartItem = {
   lineTotal: 89000,
 };
 
-const cartWith = (items: CartItem[]) => {
+const makeCart = (items: CartItem[]) => {
   let quantity = 0;
   let subtotal = 0;
   for (const item of items) {
@@ -38,7 +38,7 @@ const cartWith = (items: CartItem[]) => {
 const useCartState = (initial: CartItem[]) => {
   let items = initial;
   server.use(
-    http.get(api('/api/cart'), () => HttpResponse.json(envelope(cartWith(items)))),
+    http.get(api('/api/cart'), () => HttpResponse.json(envelope(makeCart(items)))),
     http.put<{ productId: string }, { quantity: number }>(
       api('/api/cart/items/:productId'),
       async ({ params, request }) => {

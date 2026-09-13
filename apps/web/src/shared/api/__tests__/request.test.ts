@@ -14,7 +14,7 @@ import {
 import { server } from '@test/mocks/server';
 
 import { ApiError } from '../error';
-import { request } from '../request';
+import { request, requestWithMeta } from '../request';
 
 const failure = (promise: Promise<unknown>) => promise.catch((caught: unknown) => caught);
 
@@ -142,6 +142,36 @@ describe('request', () => {
 
       expect(created).toBe(1);
     });
+  });
+
+  it('заголовок Retry-After приходит вместе с данными в миллисекундах', async () => {
+    server.use(
+      http.post(api('/api/payments/p1/simulations'), () =>
+        HttpResponse.json(envelope({ status: 'processing' }), {
+          status: 202,
+          headers: { 'Retry-After': '2' },
+        }),
+      ),
+    );
+
+    await expect(
+      requestWithMeta({
+        method: 'POST',
+        path: '/api/payments/p1/simulations',
+        body: {},
+        public: true,
+      }),
+    ).resolves.toEqual({ data: { status: 'processing' }, retryAfterMs: 2000 });
+  });
+
+  it('ответ без Retry-After отдаёт null вместо интервала', async () => {
+    server.use(
+      http.get(api('/api/products'), () => HttpResponse.json(envelope([{ id: 'lamp-orbit' }]))),
+    );
+
+    await expect(
+      requestWithMeta({ method: 'GET', path: '/api/products', public: true }),
+    ).resolves.toMatchObject({ retryAfterMs: null });
   });
 
   it('ключ идемпотентности уходит в заголовке Idempotency-Key', async () => {

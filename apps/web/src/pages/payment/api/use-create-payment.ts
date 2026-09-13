@@ -9,11 +9,12 @@ import { paymentKeys } from './payment.keys';
 
 export const useCreatePayment = () => {
   const queryClient = useQueryClient();
-
-  return useIdempotentMutation({
+  const mutation = useIdempotentMutation({
     mutationFn: (orderId: string, idempotencyKey: string) => createPayment(orderId, idempotencyKey),
     onSuccess: (payment: Payment) => {
       queryClient.setQueryData(paymentKeys.detail(payment.id), payment);
     },
   });
+
+  return { createAttempt: mutation.mutate, isPending: mutation.isPending, error: mutation.error };
 };

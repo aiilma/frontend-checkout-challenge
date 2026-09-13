@@ -1,8 +1,8 @@
-import { type CartItem } from '@/entities/cart';
 import { type ApiError } from '@/shared/api/error';
-import { Glyph } from '@/shared/ui/Glyph';
+import { InlineError } from '@/shared/ui/InlineError';
 import { MoneyText } from '@/shared/ui/MoneyText';
 import { TextAction } from '@/shared/ui/TextAction';
+import { type CartItem } from '@/entities/cart';
 
 interface CartRowProps {
   item: CartItem;
@@ -31,12 +31,7 @@ export const CartRow = ({
         <TextAction glyph="arrow" className="mt-1" onClick={onRemove} disabled={isBusy}>
           Удалить
         </TextAction>
-        {error && (
-          <span className="mt-2 flex items-center gap-1 text-caption">
-            <Glyph name="arrow" className="text-warning" />
-            {error.message}
-          </span>
-        )}
+        {error && <InlineError className="mt-2">{error.message}</InlineError>}
       </div>
     </th>
     <td className="px-3 py-3">

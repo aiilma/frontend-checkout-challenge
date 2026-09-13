@@ -1,7 +1,7 @@
 import { type ComponentProps, useId } from 'react';
 
 import { cn } from '@/shared/lib/cn';
-import { Glyph } from '@/shared/ui/Glyph';
+import { InlineError } from '@/shared/ui/InlineError';
 import { Input } from '@/shared/ui/shadcn/input';
 import { Label } from '@/shared/ui/shadcn/label';
 
@@ -23,12 +23,7 @@ export const TextField = ({ label, error, className, ...props }: TextFieldProps)
         aria-describedby={error ? errorId : undefined}
         {...props}
       />
-      {error && (
-        <span id={errorId} className="flex items-center gap-1 text-caption">
-          <Glyph name="arrow" className="text-warning" />
-          {error}
-        </span>
-      )}
+      {error && <InlineError id={errorId}>{error}</InlineError>}
     </div>
   );
 };

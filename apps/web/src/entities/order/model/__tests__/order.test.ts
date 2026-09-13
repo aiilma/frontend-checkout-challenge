@@ -2,19 +2,19 @@ import { describe, expect, it } from 'vitest';
 
 import { type Order } from '@checkout/contracts';
 
-import { cartWith, lampItem } from '@test/factories/cart';
-import { quoteFor } from '@test/factories/checkout';
-import { orderFor } from '@test/factories/order';
+import { makeCart, lampItem } from '@test/factories/cart';
+import { makeQuote } from '@test/factories/checkout';
+import { makeOrder } from '@test/factories/order';
 
 import { orderOutcome } from '../order';
 
-const quote = quoteFor(cartWith([lampItem]), { method: 'pickup', pickupPointId: 'point-center' });
+const quote = makeQuote(makeCart([lampItem]), { method: 'pickup', pickupPointId: 'point-center' });
 const customer = {
   name: 'Тестовый Покупатель',
   email: 'buyer@example.test',
   phone: '+79990000000',
 };
-const cardOrder = orderFor(quote, { quoteId: quote.id, customer, paymentMethod: 'card' });
+const cardOrder = makeOrder(quote, { quoteId: quote.id, customer, paymentMethod: 'card' });
 const withPayment = (status: Order['status'], paymentStatus: Order['paymentStatus']): Order => ({
   ...cardOrder,
   status,
@@ -25,7 +25,7 @@ describe('orderOutcome', () => {
   it('наличные подтверждены без онлайн-оплаты', () => {
     expect(
       orderOutcome(
-        orderFor(quote, { quoteId: quote.id, customer, paymentMethod: 'cash_on_delivery' }),
+        makeOrder(quote, { quoteId: quote.id, customer, paymentMethod: 'cash_on_delivery' }),
       ),
     ).toBe('confirmed');
   });
