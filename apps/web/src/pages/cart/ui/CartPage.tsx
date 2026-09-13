@@ -39,7 +39,7 @@ export const CartPage = () => {
     return (
       <>
         <PageTitle>Корзина</PageTitle>
-        {error && <ErrorBar error={error} onRetry={() => void refetch()} />}
+        {error && <ErrorBar error={error} onRetry={refetch} />}
         {cart && (
           <div className="flex flex-col items-start gap-6">
             <p className="text-display">В корзине пусто.</p>
@@ -55,7 +55,7 @@ export const CartPage = () => {
   return (
     <>
       <PageTitle>Корзина</PageTitle>
-      {error && <ErrorBar error={error} onRetry={() => void refetch()} />}
+      {error && <ErrorBar error={error} onRetry={refetch} />}
       <table className="w-full table-fixed border-t border-hairline">
         <colgroup>
           <col />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { Navigate, useBlocker, useParams } from 'react-router';
 
@@ -39,8 +39,7 @@ export const PaymentPage = () => {
   const { sandbox, isLoading: sandboxLoading, error: sandboxError } = useSandbox();
   const attempt = useCreatePayment();
   const simulation = useSimulatePayment();
-  const [attemptId, setAttemptId] = useState<string | null>(null);
-  const paymentId = attemptId ?? activeAttempt(payments)?.id ?? null;
+  const paymentId = attempt.createdId ?? activeAttempt(payments)?.id ?? null;
   const { payment, error: paymentError } = usePayment(
     paymentId,
     simulation.retryAfterMs ?? POLL_INTERVAL_MS,
@@ -62,12 +61,7 @@ export const PaymentPage = () => {
   });
 
   useEffect(() => {
-    if (!needsAttempt || isCreating) return;
-    createAttempt(orderId, {
-      onSuccess: (created) => {
-        setAttemptId(created.id);
-      },
-    });
+    if (needsAttempt && !isCreating) createAttempt(orderId);
   }, [createAttempt, isCreating, needsAttempt, orderId]);
 
   if (isLoading) return <PaymentSkeleton />;
@@ -77,7 +71,7 @@ export const PaymentPage = () => {
     return (
       <>
         <PageTitle>Оплата</PageTitle>
-        {loadError && <ErrorBar error={loadError} onRetry={() => void refetch()} />}
+        {loadError && <ErrorBar error={loadError} onRetry={refetch} />}
       </>
     );
   }
@@ -96,14 +90,6 @@ export const PaymentPage = () => {
   const handleCancel = () => {
     if (!payment || status !== 'pending' || simulation.isPending) return;
     simulation.simulate({ paymentId: payment.id, scenario: 'cancel' });
-  };
-
-  const handleRetry = () => {
-    createAttempt(orderId, {
-      onSuccess: (created) => {
-        setAttemptId(created.id);
-      },
-    });
   };
 
   return (
@@ -128,7 +114,7 @@ export const PaymentPage = () => {
             glyph="arrow"
             tone="inverse"
             className="self-start"
-            onClick={handleRetry}
+            onClick={() => createAttempt(orderId)}
             disabled={isCreating}
           >
             Повторить
@@ -152,7 +138,7 @@ export const PaymentPage = () => {
             status={status}
             orderId={order.id}
             isRetrying={isCreating}
-            onRetry={handleRetry}
+            onRetry={() => createAttempt(orderId)}
           />
         )}
       </PaymentSheet>

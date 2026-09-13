@@ -33,10 +33,7 @@ export const CheckoutPage = () => {
         {failure && (
           <ErrorBar
             error={failure}
-            onRetry={() => {
-              void cart.refetch();
-              void checkout.refetch();
-            }}
+            onRetry={() => Promise.all([cart.refetch(), checkout.refetch()])}
           />
         )}
       </>

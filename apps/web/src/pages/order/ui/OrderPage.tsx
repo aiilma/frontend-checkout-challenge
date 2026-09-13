@@ -28,7 +28,7 @@ export const OrderPage = () => {
     return (
       <>
         <PageTitle>Заказ</PageTitle>
-        {error && <ErrorBar error={error} onRetry={() => void refetch()} />}
+        {error && <ErrorBar error={error} onRetry={refetch} />}
       </>
     );
   }

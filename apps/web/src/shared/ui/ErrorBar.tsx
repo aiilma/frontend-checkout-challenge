@@ -3,7 +3,7 @@ import { TextAction } from '@/shared/ui/TextAction';
 
 interface ErrorBarProps {
   error: ApiError;
-  onRetry?: () => void;
+  onRetry?: () => unknown;
 }
 
 export const ErrorBar = ({ error, onRetry }: ErrorBarProps) => (
@@ -13,7 +13,7 @@ export const ErrorBar = ({ error, onRetry }: ErrorBarProps) => (
   >
     <span>{error.message}</span>
     {onRetry && (
-      <TextAction glyph="arrow" onClick={onRetry}>
+      <TextAction glyph="arrow" onClick={() => void onRetry()}>
         Повторить
       </TextAction>
     )}
